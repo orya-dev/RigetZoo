@@ -2,38 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Supabase Connection Test</title>
+  <title>Signup & Login</title>
 </head>
 <body>
-  <h1>Supabase Connection Test</h1>
-  <p id="status">Connecting...</p>
+  <h1>Supabase Signup & Login</h1>
+
+  <h3>Signup</h3>
+  <input type="text" id="name" placeholder="Name"><br>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button id="signup">Sign Up</button>
+
+  <h3>Login</h3>
+  <input type="email" id="loginEmail" placeholder="Email"><br>
+  <input type="password" id="loginPassword" placeholder="Password"><br>
+  <button id="login">Login</button>
+
+  <p id="status"></p>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // 🟢 Put your actual values here
     const SUPABASE_URL = "https://ffbaqmkspqhcphmtncge.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmYmFxbWtzcHFoY3BobXRuY2dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMTE4MTksImV4cCI6MjA3ODU4NzgxOX0.jL7Ko-ZCyjpf7DdY2rRB388m6uoYd7C1uuXVWI4nOcU";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function testConnection() {
-      try {
-        const { data, error } = await supabase.from("users").select("*").limit(1);
-        if (error) {
-          console.error("Error:", error);
-          document.getElementById("status").textContent = "❌ Connection failed: " + error.message;
-        } else {
-          console.log("Data:", data);
-          document.getElementById("status").textContent = "✅ Connected! Supabase is working.";
-        }
-      } catch (err) {
-        console.error("Catch:", err);
-        document.getElementById("status").textContent = "❌ Something went wrong: " + err.message;
-      }
-    }
+    // Signup
+    document.getElementById("signup").addEventListener("click", async () => {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const status = document.getElementById("status");
 
-    testConnection();
+      if (!name || !email || !password) {
+        status.textContent = "⚠️ Please fill all fields";
+        return;
+      }
+
+      const { data, error } = await supabase.from("users").insert([{ name, email, password }]);
+      if (error) {
+        console.error(error);
+        status.textContent = "❌ Signup failed: " + error.message;
+      } else {
+        status.textContent = "✅ Signed up successfully!";
+      }
+    });
+
+    // Login
+    document.getElementById("login").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const status = document.getElementById("status");
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .eq("password", password)
+        .single();
+
+      if (error || !data) {
+        console.error(error);
+        status.textContent = "❌ Invalid email or password";
+      } else {
+        status.textContent = `✅ Welcome back, ${data.name}!`;
+      }
+    });
   </script>
 </body>
 </html>
